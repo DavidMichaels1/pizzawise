@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { PizzaConfig } from '../api/catalog.ts';
 import { createFavorite } from '../api/favorites.ts';
@@ -34,6 +34,20 @@ export function BuilderPage() {
   const compareMutation = useMutation({
     mutationFn: (vars: CompareVars) => comparePizzerias(vars.config, vars.location),
   });
+
+  // Holds the results screen on the success animation for a beat before
+  // revealing the list, instead of swapping straight from spinner to data.
+  const [revealResults, setRevealResults] = useState(false);
+  useEffect(() => {
+    if (compareMutation.isPending) {
+      setRevealResults(false);
+      return;
+    }
+    if (compareMutation.isSuccess) {
+      const timer = setTimeout(() => setRevealResults(true), 900);
+      return () => clearTimeout(timer);
+    }
+  }, [compareMutation.isPending, compareMutation.isSuccess]);
 
   const favoriteMutation = useMutation({
     mutationFn: (vars: CompareVars) => createFavorite(favoriteName, vars.config),
@@ -84,22 +98,29 @@ export function BuilderPage() {
 
       {phase === 'results' && (
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-neutral-900">
-              {compareMutation.data ? `${compareMutation.data.length} pizzerias nearby, ranked by value` : 'Finding the best deals…'}
-            </h1>
-            <button type="button" onClick={editPizza} className="text-sm text-neutral-600 underline">
-              Edit pizza
-            </button>
-          </div>
-
-          {compareMutation.isPending && (
-            <PizzaProgress active={compareMutation.isPending} label="Comparing prices across nearby pizzerias…" />
+          {(compareMutation.isPending || (compareMutation.isSuccess && !revealResults)) && (
+            <>
+              <h1 className="text-center text-2xl font-semibold text-neutral-900">Finding the best deals…</h1>
+              <PizzaProgress
+                status={compareMutation.isSuccess ? 'success' : 'loading'}
+                label="Comparing prices across nearby pizzerias…"
+              />
+            </>
           )}
+
           {compareMutation.isError && <p className="text-sm text-red-600">Couldn't fetch prices — try again.</p>}
 
-          {compareMutation.data && (
+          {compareMutation.data && revealResults && (
             <>
+              <div className="flex items-center justify-between">
+                <h1 className="text-xl font-semibold text-neutral-900">
+                  {compareMutation.data.length} pizzerias nearby, ranked by value
+                </h1>
+                <button type="button" onClick={editPizza} className="text-sm text-neutral-600 underline">
+                  Edit pizza
+                </button>
+              </div>
+
               {user &&
                 (isSavingFavorite ? (
                   <form

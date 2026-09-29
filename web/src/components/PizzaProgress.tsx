@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
+
+type ProgressStatus = 'loading' | 'success';
 
 /**
  * comparePizzerias is a single fetch — there's no real progress to report.
- * This eases toward 90% while the request is in flight and relies on the
- * parent swapping it out for real results the moment they arrive, rather
- * than faking a completion to 100%.
+ * This eases toward 90% while the request is in flight; the parent flips
+ * `status` to 'success' the moment results arrive, which snaps the fill
+ * the rest of the way for the celebration below.
  */
 function useFakeProgress(active: boolean): number {
   const [progress, setProgress] = useState(0);
@@ -17,7 +19,7 @@ function useFakeProgress(active: boolean): number {
     const start = performance.now();
     let frame: number;
     const tick = (now: number) => {
-      setProgress(90 * (1 - Math.exp(-(now - start) / 1800)));
+      setProgress(90 * (1 - Math.exp(-(now - start) / 1300)));
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
@@ -40,28 +42,70 @@ const PEPPERONI = [
   { cx: 50, cy: 68, r: 4.5 },
 ];
 
-export function PizzaProgress({ active, label }: { active: boolean; label: string }) {
-  const progress = useFakeProgress(active);
+const DOUGH_COLOR = [253, 230, 138] as const; // pale, "unbaked"
+const BAKED_COLOR = [234, 88, 12] as const; // deep orange, "fresh out the oven"
+
+function fillColor(progress: number): string {
+  const t = Math.min(Math.max(progress / 100, 0), 1);
+  const [r, g, b] = DOUGH_COLOR.map((c, i) => Math.round(c + (BAKED_COLOR[i] - c) * t));
+  return `rgb(${r},${g},${b})`;
+}
+
+const CONFETTI = ['🎉', '✨', '🧀', '🎉', '✨', '🧀', '🎉', '✨'].map((emoji, i, arr) => ({
+  emoji,
+  angle: (360 / arr.length) * i,
+}));
+
+export function PizzaProgress({ status, label }: { status: ProgressStatus; label: string }) {
+  const loadingProgress = useFakeProgress(status === 'loading');
+  const done = status === 'success';
+  const progress = done ? 100 : loadingProgress;
   const fillTop = 96 - (progress / 100) * 94;
 
   return (
     <div className="flex flex-col items-center gap-4 py-10">
-      <svg viewBox="0 0 100 100" className="h-40 w-40" aria-hidden>
-        <defs>
-          <clipPath id="pizza-progress-clip">
-            <rect x="0" y={fillTop} width="100" height={100 - fillTop} />
-          </clipPath>
-        </defs>
-        <path d={SLICE_PATH} fill="#e5e5e5" />
-        <g clipPath="url(#pizza-progress-clip)">
-          <path d={SLICE_PATH} fill="#f97316" />
-        </g>
-        <path d={SLICE_PATH} fill="none" stroke="#d4d4d4" strokeWidth="1.5" />
-        {PEPPERONI.map((p, i) => (
-          <circle key={i} cx={p.cx} cy={p.cy} r={p.r} fill="#7c2d12" opacity={0.55} />
-        ))}
-      </svg>
-      <p className="text-neutral-600">{label}</p>
+      <div className="relative flex h-56 w-56 items-center justify-center">
+        {done && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden>
+            {CONFETTI.map((c, i) => (
+              <span
+                key={i}
+                className="absolute text-xl"
+                style={{ '--angle': `${c.angle}deg`, animation: 'confetti-burst 0.7s ease-out forwards' } as CSSProperties}
+              >
+                {c.emoji}
+              </span>
+            ))}
+          </div>
+        )}
+        {done ? (
+          <span
+            role="img"
+            aria-label="Pizza ready"
+            className="text-8xl"
+            style={{ animation: 'pizza-pop 0.4s ease-out' }}
+          >
+            🍕
+          </span>
+        ) : (
+          <svg viewBox="0 0 100 100" className="h-56 w-56" aria-hidden>
+            <defs>
+              <clipPath id="pizza-progress-clip">
+                <rect x="0" y={fillTop} width="100" height={100 - fillTop} />
+              </clipPath>
+            </defs>
+            <path d={SLICE_PATH} fill="#e5e5e5" />
+            <g clipPath="url(#pizza-progress-clip)">
+              <path d={SLICE_PATH} fill={fillColor(progress)} />
+            </g>
+            <path d={SLICE_PATH} fill="none" stroke="#d4d4d4" strokeWidth="1.5" />
+            {PEPPERONI.map((p, i) => (
+              <circle key={i} cx={p.cx} cy={p.cy} r={p.r} fill="#7c2d12" opacity={0.55} />
+            ))}
+          </svg>
+        )}
+      </div>
+      <p className="text-neutral-600">{done ? 'Found the best deals!' : label}</p>
     </div>
   );
 }
