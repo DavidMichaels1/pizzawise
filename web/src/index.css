@@ -1,0 +1,11 @@
+@import 'tailwindcss';
+
+@keyframes float-pizza {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--rot, 0deg));
+  }
+  50% {
+    transform: translateY(-22px) rotate(calc(var(--rot, 0deg) + 8deg));
+  }
+}

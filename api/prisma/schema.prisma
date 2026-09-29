@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Canonical pizza taxonomy. Builder and comparison engine work in these
+// terms; each pizzeria adapter maps its own raw catalog onto them.
+enum Size {
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+enum Crust {
+  THIN
+  STUFFED
+  GLUTEN_FREE
+  SOURDOUGH
+  PAN
+  NEAPOLITAN
+}
+
+enum Sauce {
+  TOMATO
+  WHITE
+  PESTO
+  BBQ
+  SAN_MARZANO
+}
+
+enum Topping {
+  MUSHROOM
+  ONION
+  OLIVES
+  EXTRA_CHEESE
+  PEPPERONI
+  PINEAPPLE
+  ANCHOVY
+  BUFFALO_MOZZARELLA
+  ARTICHOKE
+  TRUFFLE_OIL
+  PROSCIUTTO
+  CORN
+  JALAPENO
+}
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime   @default(now())
+  favorites    Favorite[]
+  orders       Order[]
+}
+
+// A named, saved pizza configuration. Purely canonical (size/crust/sauce/
+// toppings) — not tied to any pizzeria, since the whole point is comparing
+// the same build across all of them.
+model Favorite {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  size      Size
+  crust     Crust
+  sauce     Sauce
+  toppings  Topping[]
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// A placed order. Pizzeria details are denormalized snapshots (name, coords,
+// price, eta) rather than a foreign key, because the pizzeria catalog is an
+// external system we don't own — it can change or disappear after the fact,
+// and an order record should reflect what was true when it was placed.
+model Order {
+  id             String    @id @default(uuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  size           Size
+  crust          Crust
+  sauce          Sauce
+  toppings       Topping[]
+
+  pizzeriaId     String
+  pizzeriaName   String
+  pizzeriaLat    Float
+  pizzeriaLng    Float
+
+  deliveryLat    Float
+  deliveryLng    Float
+
+  priceAgorot    Int
+  distanceKm     Float
+  // Nullable: the upstream pizzeria API sometimes doesn't report one. Order
+  // status simulation falls back to a default when this is null rather than
+  // pretending we know it — see domain/order-status.ts.
+  etaMinutes     Int?
+
+  placedAt       DateTime  @default(now())
+  cancelledAt    DateTime?
+
+  @@index([userId])
+}
