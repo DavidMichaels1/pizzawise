@@ -9,7 +9,7 @@ import { useAuth } from '../auth/AuthContext.tsx';
 import { LivePizzaPreview } from '../components/LivePizzaPreview.tsx';
 import { PizzaProgress } from '../components/PizzaProgress.tsx';
 import { PizzaWizard } from '../components/PizzaWizard.tsx';
-import { formatDistance, formatEta, formatPrice } from '../lib/format.ts';
+import { ResultsCarousel } from '../components/ResultsCarousel.tsx';
 
 const DEFAULT_CONFIG: PizzaConfig = { size: 'MEDIUM', crust: 'THIN', sauce: 'TOMATO', toppings: [] };
 
@@ -126,40 +126,11 @@ export function BuilderPage() {
           {compareMutation.data && revealResults && (
             <div className="grid gap-8 lg:grid-cols-[1fr_18rem]">
               <div className="space-y-4">
-                <h1 className="text-xl font-semibold text-neutral-900">
-                  {compareMutation.data.length} pizzerias nearby, ranked by value
+                <h1 className="text-2xl font-bold uppercase tracking-wide text-neutral-900">
+                  {compareMutation.data.length} pizzas nearby
                 </h1>
 
-                {compareMutation.data.map((result) => (
-                  <article key={result.pizzeriaId} className="rounded-xl border border-neutral-200 bg-white p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h3 className="font-medium text-neutral-900">{result.pizzeriaName}</h3>
-                        <p className="text-sm text-neutral-600">
-                          {formatDistance(result.distanceKm)} · {formatEta(result.etaMinutes)}
-                        </p>
-                        {result.matchQuality === 'approximate' && (
-                          <p className="mt-1 text-xs text-amber-600">
-                            Closest match{result.missingToppings.length > 0 && ` — missing: ${result.missingToppings.join(', ').toLowerCase()}`}
-                            {!result.crustAvailable && ' — crust substituted'}
-                            {!result.sauceAvailable && ' — sauce unavailable'}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex shrink-0 flex-col items-end gap-2">
-                        <span className="text-lg font-semibold text-neutral-900">{formatPrice(result.priceAgorot)}</span>
-                        <button
-                          type="button"
-                          onClick={() => orderOrRedirect(result)}
-                          disabled={orderMutation.isPending}
-                          className="rounded-full bg-neutral-900 px-4 py-1.5 text-sm text-white hover:bg-neutral-700 disabled:opacity-50"
-                        >
-                          Order
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                ))}
+                <ResultsCarousel results={compareMutation.data} onOrder={orderOrRedirect} orderPending={orderMutation.isPending} />
               </div>
 
               <aside className="lg:sticky lg:top-6 lg:self-start">
