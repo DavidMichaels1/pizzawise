@@ -105,7 +105,7 @@ export function BuilderPage() {
         <section className="space-y-4">
           {(compareMutation.isPending || (compareMutation.isSuccess && !revealResults)) && (
             <>
-              <h1 className="text-center text-4xl font-semibold text-neutral-900">Finding the best deals</h1>
+              <h1 className="text-center text-4xl font-semibold text-neutral-900">Cooking the Best Deals</h1>
               <PizzaProgress
                 status={compareMutation.isSuccess ? 'success' : 'loading'}
                 label="Comparing prices across nearby pizzerias…"

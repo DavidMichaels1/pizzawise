@@ -56,6 +56,15 @@ const CONFETTI = ['🎉', '✨', '🧀', '🎉', '✨', '🧀', '🎉', '✨'].m
   angle: (360 / arr.length) * i,
 }));
 
+// Wisps of steam drifting up off the slice while it "cooks" — staggered
+// starting points, drift directions and timings so they don't move in lockstep.
+const SMOKE_PUFFS = [
+  { left: '38%', drift: '-14px', duration: 2.6, delay: 0 },
+  { left: '50%', drift: '6px', duration: 2.2, delay: 0.6 },
+  { left: '62%', drift: '16px', duration: 2.8, delay: 1.1 },
+  { left: '46%', drift: '-8px', duration: 2.4, delay: 1.6 },
+];
+
 export function PizzaProgress({ status, label }: { status: ProgressStatus; label: string }) {
   const loadingProgress = useFakeProgress(status === 'loading');
   const done = status === 'success';
@@ -64,13 +73,30 @@ export function PizzaProgress({ status, label }: { status: ProgressStatus; label
 
   return (
     <div className="flex flex-col items-center gap-4 py-10">
-      <div className="relative flex h-56 w-56 items-center justify-center">
+      <div className="relative flex h-72 w-72 items-center justify-center">
+        {!done && (
+          <div className="pointer-events-none absolute inset-x-0 -top-4 h-16" aria-hidden>
+            {SMOKE_PUFFS.map((p, i) => (
+              <span
+                key={i}
+                className="absolute bottom-0 h-6 w-6 rounded-full bg-neutral-300/70 blur-md"
+                style={
+                  {
+                    left: p.left,
+                    '--drift': p.drift,
+                    animation: `smoke-rise ${p.duration}s ease-out ${p.delay}s infinite`,
+                  } as CSSProperties
+                }
+              />
+            ))}
+          </div>
+        )}
         {done && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden>
             {CONFETTI.map((c, i) => (
               <span
                 key={i}
-                className="absolute text-xl"
+                className="absolute text-2xl"
                 style={{ '--angle': `${c.angle}deg`, animation: 'confetti-burst 0.7s ease-out forwards' } as CSSProperties}
               >
                 {c.emoji}
@@ -82,13 +108,13 @@ export function PizzaProgress({ status, label }: { status: ProgressStatus; label
           <span
             role="img"
             aria-label="Pizza ready"
-            className="text-8xl"
+            className="text-[10rem] leading-none"
             style={{ animation: 'pizza-pop 0.4s ease-out' }}
           >
             🍕
           </span>
         ) : (
-          <svg viewBox="0 0 100 100" className="h-56 w-56" aria-hidden>
+          <svg viewBox="0 0 100 100" className="h-72 w-72" aria-hidden>
             <defs>
               <clipPath id="pizza-progress-clip">
                 <rect x="0" y={fillTop} width="100" height={100 - fillTop} />
