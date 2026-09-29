@@ -124,58 +124,58 @@ export function BuilderPage() {
           {compareMutation.isError && <p className="text-sm text-red-600">Couldn't fetch prices — try again.</p>}
 
           {compareMutation.data && revealResults && (
-            <div className="grid gap-8 lg:grid-cols-[1fr_18rem]">
-              <div className="space-y-4">
-                <h1 className="text-2xl font-bold uppercase tracking-wide text-neutral-900">
-                  {compareMutation.data.length} pizzas nearby
-                </h1>
+            <div className="space-y-4">
+              <h1 className="text-center text-2xl font-bold uppercase tracking-wide text-neutral-900">
+                {compareMutation.data.length} pizzas nearby
+              </h1>
 
+              <div className="grid gap-8 lg:grid-cols-[1fr_18rem]">
                 <ResultsCarousel results={compareMutation.data} onOrder={orderOrRedirect} orderPending={orderMutation.isPending} />
-              </div>
 
-              <aside className="lg:sticky lg:top-6 lg:self-start">
-                <div className="rounded-2xl border border-neutral-200 bg-white p-6">
-                  <LivePizzaPreview config={config} stepIndex={4} />
+                <aside>
+                  <div className="flex h-full flex-col items-center justify-center rounded-2xl border border-neutral-200 bg-white p-6">
+                    <LivePizzaPreview config={config} stepIndex={4} />
 
-                  <div className="mt-2 flex flex-col items-center gap-3">
-                    {user &&
-                      (isSavingFavorite ? (
-                        <form
-                          className="flex items-center gap-2"
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            if (compareMutation.variables) favoriteMutation.mutate(compareMutation.variables);
-                          }}
-                        >
-                          <input
-                            autoFocus
-                            required
-                            placeholder="Favorite name"
-                            value={favoriteName}
-                            onChange={(e) => setFavoriteName(e.target.value)}
-                            className="rounded-full border border-neutral-300 px-3 py-1.5 text-sm"
-                          />
-                          <button type="submit" className="text-sm font-medium text-neutral-900 underline">
-                            Save
+                    <div className="mt-2 flex flex-col items-center gap-3">
+                      {user &&
+                        (isSavingFavorite ? (
+                          <form
+                            className="flex items-center gap-2"
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              if (compareMutation.variables) favoriteMutation.mutate(compareMutation.variables);
+                            }}
+                          >
+                            <input
+                              autoFocus
+                              required
+                              placeholder="Favorite name"
+                              value={favoriteName}
+                              onChange={(e) => setFavoriteName(e.target.value)}
+                              className="rounded-full border border-neutral-300 px-3 py-1.5 text-sm"
+                            />
+                            <button type="submit" className="text-sm font-medium text-neutral-900 underline">
+                              Save
+                            </button>
+                          </form>
+                        ) : (
+                          <button type="button" onClick={() => setIsSavingFavorite(true)} className="text-sm text-neutral-600 underline">
+                            Save as favorite
                           </button>
-                        </form>
-                      ) : (
-                        <button type="button" onClick={() => setIsSavingFavorite(true)} className="text-sm text-neutral-600 underline">
-                          Save as favorite
-                        </button>
-                      ))}
+                        ))}
 
-                    <div className="flex items-center gap-4">
-                      <button type="button" onClick={startOver} className="text-sm text-neutral-600 underline">
-                        Start over
-                      </button>
-                      <button type="button" onClick={editPizza} className="text-sm text-neutral-600 underline">
-                        Edit pizza
-                      </button>
+                      <div className="flex items-center gap-4">
+                        <button type="button" onClick={startOver} className="text-sm text-neutral-600 underline">
+                          Start over
+                        </button>
+                        <button type="button" onClick={editPizza} className="text-sm text-neutral-600 underline">
+                          Edit pizza
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </aside>
+                </aside>
+              </div>
             </div>
           )}
         </section>
