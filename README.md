@@ -129,6 +129,23 @@ Both services run on Railway as separate services from the same GitHub repo, eac
 - **`web`** is built with Vite and served by nginx, with SPA fallback routing (`try_files $uri /index.html`) so client-side routes survive a page refresh. `VITE_API_BASE_URL` is baked in at *build* time (Vite convention), passed as a Docker build ARG pointing at the `api` service's public domain.
 - Postgres is a managed Railway Postgres instance, referenced by the `api` service via `${{Postgres.DATABASE_URL}}`.
 
+## Bonus: CLI + Claude Skill
+
+`cli/` is a small, dependency-free command-line client for the `api` service — everything the web app does (build a pizza, compare, order, check status), from a terminal instead of a browser:
+
+```bash
+cd cli
+npm install                  # dev-only, for typechecking — the CLI itself has zero runtime dependencies
+./bin/pizzawise login --email you@example.com --password yourpassword
+./bin/pizzawise compare --size LARGE --crust THIN --sauce TOMATO --topping PEPPERONI --area Florentin
+./bin/pizzawise order --pick 1
+./bin/pizzawise status <order-id>
+```
+
+Run `./bin/pizzawise` with no arguments for the full command list. It talks to the same production API by default (override with `PIZZAWISE_API_BASE_URL` for local dev against `http://localhost:4000`), stores its login token in `~/.pizzawise/config.json`, and remembers the last `compare` call's results so `order --pick <n>` doesn't require re-typing the whole pizza.
+
+`.claude/skills/pizzawise-order/SKILL.md` is a Claude Skill that teaches Claude how to drive that CLI — the mapping from natural language to the exact enum flags, the preset delivery areas, and the rule to always confirm which pizzeria before placing a real order. With this repo open in Claude Code, asking "order me a large pepperoni pizza to Florentin" makes Claude run the actual CLI commands against the actual API, rather than just describing what it would do.
+
 ## Known trade-offs and limitations
 
 - **Fixed topping taxonomy.** The 13 toppings PizzaWise supports are a canonical subset chosen to be common across pizzerias — real pizzeria-specific extras (feta, arugula, za'atar, etc.) exist upstream but aren't modeled. This was verified against the live data: every supported topping is genuinely carried by at least one nearby pizzeria, so nothing in the builder is unobtainable.

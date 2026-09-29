@@ -5,4 +5,8 @@ dist/
 !.env.example
 *.log
 .DS_Store
-.claude/
+# Local Claude Code session state only — .claude/skills/ (the CLI bonus's
+# Claude Skill) is tracked. A blanket `.claude/` ignore can't be un-excluded
+# per directory for children, so these are named individually instead.
+.claude/scheduled_tasks.lock
+.claude/settings.local.json

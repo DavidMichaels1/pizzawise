@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Runs the CLI's TypeScript source directly (Node 22's built-in type
+# stripping) — same no-build-step approach as the api service.
+exec node --experimental-strip-types "$(dirname "$0")/../src/index.ts" "$@"
