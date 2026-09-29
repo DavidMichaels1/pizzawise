@@ -10,5 +10,5 @@ export const env = {
   jwtSecret: required('JWT_SECRET'),
   pizzeriaApiBaseUrl: required('PIZZERIA_API_BASE_URL'),
   pizzeriaApiKey: required('PIZZERIA_API_KEY'),
-  frontendOrigin: process.env.FRONTEND_ORIGIN ?? '*',
+  frontendOrigin: process.env.FRONTEND_ORIGIN || '*',
 };
