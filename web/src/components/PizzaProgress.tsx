@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState, type CSSProperties } from 'react';
 
 type ProgressStatus = 'loading' | 'success';
@@ -59,11 +60,16 @@ const CONFETTI = ['🎉', '✨', '🧀', '🎉', '✨', '🧀', '🎉', '✨'].m
 // Wisps of steam drifting up off the slice while it "cooks" — staggered
 // starting points, drift directions and timings so they don't move in lockstep.
 const SMOKE_PUFFS = [
-  { left: '38%', drift: '-14px', duration: 2.6, delay: 0 },
+  { left: '30%', drift: '-14px', duration: 2.6, delay: 0 },
   { left: '50%', drift: '6px', duration: 2.2, delay: 0.6 },
-  { left: '62%', drift: '16px', duration: 2.8, delay: 1.1 },
-  { left: '46%', drift: '-8px', duration: 2.4, delay: 1.6 },
+  { left: '68%', drift: '16px', duration: 2.8, delay: 1.1 },
+  { left: '44%', drift: '-8px', duration: 2.4, delay: 1.6 },
 ];
+
+// The oven's viewing window, as inset percentages of the 288px stage —
+// shared by the window frame, its glass sheen and the steam clipped inside it.
+const WINDOW_INSET: CSSProperties = { top: '14%', bottom: '18%', left: '13%', right: '13%' };
+const OVEN_COLOR = '#292524'; // stone-800
 
 export function PizzaProgress({ status, label }: { status: ProgressStatus; label: string }) {
   const loadingProgress = useFakeProgress(status === 'loading');
@@ -73,63 +79,86 @@ export function PizzaProgress({ status, label }: { status: ProgressStatus; label
 
   return (
     <div className="flex flex-col items-center gap-4 py-10">
-      <div className="relative flex h-72 w-72 items-center justify-center">
-        {!done && (
-          <div className="pointer-events-none absolute inset-x-0 -top-4 h-16" aria-hidden>
-            {SMOKE_PUFFS.map((p, i) => (
-              <span
-                key={i}
-                className="absolute bottom-0 h-6 w-6 rounded-full bg-neutral-300/70 blur-md"
-                style={
-                  {
-                    left: p.left,
-                    '--drift': p.drift,
-                    animation: `smoke-rise ${p.duration}s ease-out ${p.delay}s infinite`,
-                  } as CSSProperties
-                }
-              />
-            ))}
-          </div>
-        )}
-        {done && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden>
-            {CONFETTI.map((c, i) => (
-              <span
-                key={i}
-                className="absolute text-2xl"
-                style={{ '--angle': `${c.angle}deg`, animation: 'confetti-burst 0.7s ease-out forwards' } as CSSProperties}
-              >
-                {c.emoji}
+      <div className="relative h-72 w-72" style={{ perspective: 1000 }}>
+        {/* Baking inside the oven — sized to sit fully within the window rather than behind the frame. */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          {done ? (
+            <div className="relative flex items-center justify-center">
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden>
+                {CONFETTI.map((c, i) => (
+                  <span
+                    key={i}
+                    className="absolute text-2xl"
+                    style={{ '--angle': `${c.angle}deg`, animation: 'confetti-burst 0.7s ease-out forwards' } as CSSProperties}
+                  >
+                    {c.emoji}
+                  </span>
+                ))}
+              </div>
+              <span role="img" aria-label="Pizza ready" className="text-[10rem] leading-none" style={{ animation: 'pizza-pop 0.4s ease-out' }}>
+                🍕
               </span>
-            ))}
-          </div>
-        )}
-        {done ? (
-          <span
-            role="img"
-            aria-label="Pizza ready"
-            className="text-[10rem] leading-none"
-            style={{ animation: 'pizza-pop 0.4s ease-out' }}
-          >
-            🍕
-          </span>
-        ) : (
-          <svg viewBox="0 0 100 100" className="h-72 w-72" aria-hidden>
-            <defs>
-              <clipPath id="pizza-progress-clip">
-                <rect x="0" y={fillTop} width="100" height={100 - fillTop} />
-              </clipPath>
-            </defs>
-            <path d={SLICE_PATH} fill="#e5e5e5" />
-            <g clipPath="url(#pizza-progress-clip)">
-              <path d={SLICE_PATH} fill={fillColor(progress)} />
-            </g>
-            <path d={SLICE_PATH} fill="none" stroke="#d4d4d4" strokeWidth="1.5" />
-            {PEPPERONI.map((p, i) => (
-              <circle key={i} cx={p.cx} cy={p.cy} r={p.r} fill="#7c2d12" opacity={0.55} />
-            ))}
-          </svg>
-        )}
+            </div>
+          ) : (
+            <svg viewBox="0 0 100 100" className="h-44 w-44" aria-hidden>
+              <defs>
+                <clipPath id="pizza-progress-clip">
+                  <rect x="0" y={fillTop} width="100" height={100 - fillTop} />
+                </clipPath>
+              </defs>
+              <path d={SLICE_PATH} fill="#e5e5e5" />
+              <g clipPath="url(#pizza-progress-clip)">
+                <path d={SLICE_PATH} fill={fillColor(progress)} />
+              </g>
+              <path d={SLICE_PATH} fill="none" stroke="#d4d4d4" strokeWidth="1.5" />
+              {PEPPERONI.map((p, i) => (
+                <circle key={i} cx={p.cx} cy={p.cy} r={p.r} fill="#7c2d12" opacity={0.55} />
+              ))}
+            </svg>
+          )}
+        </div>
+
+        {/* The oven door — drops open on success to reveal the finished pizza behind it. */}
+        <AnimatePresence>
+          {!done && (
+            <motion.div
+              key="oven-door"
+              className="absolute inset-0 overflow-hidden rounded-[2rem]"
+              style={{ transformOrigin: 'bottom center' }}
+              exit={{ rotateX: -110, opacity: 0 }}
+              transition={{ duration: 0.5, ease: 'easeIn' }}
+            >
+              {/* Steam sits behind the window frame so the frame's shadow (below) naturally
+                  clips any puff that drifts past the glass. */}
+              <div className="pointer-events-none absolute" style={WINDOW_INSET} aria-hidden>
+                {SMOKE_PUFFS.map((p, i) => (
+                  <span
+                    key={i}
+                    className="absolute bottom-2 h-7 w-7 rounded-full bg-neutral-600/80 blur-[3px]"
+                    style={{ left: p.left, '--drift': p.drift, animation: `smoke-rise ${p.duration}s ease-out ${p.delay}s infinite` } as CSSProperties}
+                  />
+                ))}
+              </div>
+
+              {/* The window's own box stays transparent; its oversized shadow paints the rest of the oven face. */}
+              <div className="absolute rounded-2xl border-4 border-stone-600" style={{ ...WINDOW_INSET, boxShadow: `0 0 0 9999px ${OVEN_COLOR}` }} />
+
+              {/* Glass sheen, over the frame so it still reads as a window rather than a hole. */}
+              <div
+                className="pointer-events-none absolute rounded-2xl"
+                style={{ ...WINDOW_INSET, background: 'linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0) 55%)' }}
+                aria-hidden
+              />
+
+              <div className="absolute inset-x-0 top-0 flex items-center justify-center gap-2" style={{ height: '14%' }} aria-hidden>
+                <span className="h-2 w-2 rounded-full bg-stone-500" />
+                <span className="h-2 w-2 rounded-full bg-stone-500" />
+                <span className="h-2 w-2 rounded-full bg-stone-500" />
+              </div>
+              <div className="absolute inset-x-12 rounded-full bg-stone-500" style={{ bottom: '8%', height: '6px' }} aria-hidden />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
       <p className="text-neutral-600">{done ? 'Found the best deals!' : label}</p>
     </div>

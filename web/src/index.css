@@ -42,10 +42,10 @@
     opacity: 0;
   }
   25% {
-    opacity: 0.5;
+    opacity: 0.85;
   }
   100% {
-    transform: translate(var(--drift, 12px), -90px) scale(1.6);
+    transform: translate(var(--drift, 12px), -70px) scale(1.6);
     opacity: 0;
   }
 }
