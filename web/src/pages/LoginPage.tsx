@@ -1,9 +1,16 @@
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link, useLocation, useNavigate, type Location } from 'react-router-dom';
+import type { PizzaConfig } from '../api/catalog.ts';
 import { loginUser } from '../api/auth.ts';
 import { ApiError } from '../api/client.ts';
 import { useAuth } from '../auth/AuthContext.tsx';
+
+interface RedirectState {
+  from?: Location;
+  /** The pizza an order attempt redirected here with — handed back to the builder so it isn't lost. */
+  config?: PizzaConfig;
+}
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -11,13 +18,17 @@ export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const redirectState = location.state as RedirectState | null;
 
   const mutation = useMutation({
     mutationFn: () => loginUser(email, password),
     onSuccess: ({ token, user }) => {
       login(token, user);
-      const from = (location.state as { from?: Location })?.from;
-      navigate(from ? `${from.pathname}${from.search}` : '/', { replace: true });
+      const from = redirectState?.from;
+      navigate(from ? `${from.pathname}${from.search}` : '/', {
+        replace: true,
+        state: redirectState?.config ? { config: redirectState.config } : undefined,
+      });
     },
   });
 
@@ -62,7 +73,7 @@ export function LoginPage() {
       </form>
       <p className="mt-4 text-sm text-neutral-600">
         No account?{' '}
-        <Link to="/register" className="font-medium text-neutral-900 underline">
+        <Link to="/register" state={location.state} className="font-medium text-neutral-900 underline">
           Sign up
         </Link>
       </p>

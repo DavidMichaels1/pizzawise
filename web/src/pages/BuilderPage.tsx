@@ -79,7 +79,11 @@ export function BuilderPage() {
   const orderOrRedirect = (result: ComparisonResult) => {
     if (!compareMutation.variables) return;
     if (!user) {
-      navigate('/login', { state: { from: routerLocation } });
+      // Carries the in-progress build along so login/register can hand it back
+      // via the same `config` state the favorites "Use this" flow already
+      // reads — otherwise a logged-out order attempt would silently discard
+      // everything the user just built.
+      navigate('/login', { state: { from: routerLocation, config: compareMutation.variables.config } });
       return;
     }
     orderMutation.mutate({ pizzeriaId: result.pizzeriaId, vars: compareMutation.variables });
