@@ -6,6 +6,7 @@ import { createFavorite } from '../api/favorites.ts';
 import { placeOrder } from '../api/orders.ts';
 import { comparePizzerias, type ComparisonResult, type Coordinates } from '../api/pizzerias.ts';
 import { useAuth } from '../auth/AuthContext.tsx';
+import { LivePizzaPreview } from '../components/LivePizzaPreview.tsx';
 import { PizzaProgress } from '../components/PizzaProgress.tsx';
 import { PizzaWizard } from '../components/PizzaWizard.tsx';
 import { formatDistance, formatEta, formatPrice } from '../lib/format.ts';
@@ -123,79 +124,88 @@ export function BuilderPage() {
           {compareMutation.isError && <p className="text-sm text-red-600">Couldn't fetch prices — try again.</p>}
 
           {compareMutation.data && revealResults && (
-            <>
-              <div className="flex items-center justify-between">
+            <div className="grid gap-8 lg:grid-cols-[1fr_18rem]">
+              <div className="space-y-4">
                 <h1 className="text-xl font-semibold text-neutral-900">
                   {compareMutation.data.length} pizzerias nearby, ranked by value
                 </h1>
-                <div className="flex items-center gap-4">
-                  <button type="button" onClick={startOver} className="text-sm text-neutral-600 underline">
-                    Start over
-                  </button>
-                  <button type="button" onClick={editPizza} className="text-sm text-neutral-600 underline">
-                    Edit pizza
-                  </button>
-                </div>
+
+                {compareMutation.data.map((result) => (
+                  <article key={result.pizzeriaId} className="rounded-xl border border-neutral-200 bg-white p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="font-medium text-neutral-900">{result.pizzeriaName}</h3>
+                        <p className="text-sm text-neutral-600">
+                          {formatDistance(result.distanceKm)} · {formatEta(result.etaMinutes)}
+                        </p>
+                        {result.matchQuality === 'approximate' && (
+                          <p className="mt-1 text-xs text-amber-600">
+                            Closest match{result.missingToppings.length > 0 && ` — missing: ${result.missingToppings.join(', ').toLowerCase()}`}
+                            {!result.crustAvailable && ' — crust substituted'}
+                            {!result.sauceAvailable && ' — sauce unavailable'}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 flex-col items-end gap-2">
+                        <span className="text-lg font-semibold text-neutral-900">{formatPrice(result.priceAgorot)}</span>
+                        <button
+                          type="button"
+                          onClick={() => orderOrRedirect(result)}
+                          disabled={orderMutation.isPending}
+                          className="rounded-full bg-neutral-900 px-4 py-1.5 text-sm text-white hover:bg-neutral-700 disabled:opacity-50"
+                        >
+                          Order
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                ))}
               </div>
 
-              {user &&
-                (isSavingFavorite ? (
-                  <form
-                    className="flex items-center gap-2"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      if (compareMutation.variables) favoriteMutation.mutate(compareMutation.variables);
-                    }}
-                  >
-                    <input
-                      autoFocus
-                      required
-                      placeholder="Favorite name"
-                      value={favoriteName}
-                      onChange={(e) => setFavoriteName(e.target.value)}
-                      className="rounded-full border border-neutral-300 px-3 py-1.5 text-sm"
-                    />
-                    <button type="submit" className="text-sm font-medium text-neutral-900 underline">
-                      Save
-                    </button>
-                  </form>
-                ) : (
-                  <button type="button" onClick={() => setIsSavingFavorite(true)} className="text-sm text-neutral-600 underline">
-                    Save as favorite
-                  </button>
-                ))}
+              <aside className="lg:sticky lg:top-6 lg:self-start">
+                <div className="rounded-2xl border border-neutral-200 bg-white p-6">
+                  <LivePizzaPreview config={config} stepIndex={4} />
 
-              {compareMutation.data.map((result) => (
-                <article key={result.pizzeriaId} className="rounded-xl border border-neutral-200 bg-white p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="font-medium text-neutral-900">{result.pizzeriaName}</h3>
-                      <p className="text-sm text-neutral-600">
-                        {formatDistance(result.distanceKm)} · {formatEta(result.etaMinutes)}
-                      </p>
-                      {result.matchQuality === 'approximate' && (
-                        <p className="mt-1 text-xs text-amber-600">
-                          Closest match{result.missingToppings.length > 0 && ` — missing: ${result.missingToppings.join(', ').toLowerCase()}`}
-                          {!result.crustAvailable && ' — crust substituted'}
-                          {!result.sauceAvailable && ' — sauce unavailable'}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex shrink-0 flex-col items-end gap-2">
-                      <span className="text-lg font-semibold text-neutral-900">{formatPrice(result.priceAgorot)}</span>
-                      <button
-                        type="button"
-                        onClick={() => orderOrRedirect(result)}
-                        disabled={orderMutation.isPending}
-                        className="rounded-full bg-neutral-900 px-4 py-1.5 text-sm text-white hover:bg-neutral-700 disabled:opacity-50"
-                      >
-                        Order
+                  <div className="mt-2 flex flex-col items-center gap-3">
+                    {user &&
+                      (isSavingFavorite ? (
+                        <form
+                          className="flex items-center gap-2"
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            if (compareMutation.variables) favoriteMutation.mutate(compareMutation.variables);
+                          }}
+                        >
+                          <input
+                            autoFocus
+                            required
+                            placeholder="Favorite name"
+                            value={favoriteName}
+                            onChange={(e) => setFavoriteName(e.target.value)}
+                            className="rounded-full border border-neutral-300 px-3 py-1.5 text-sm"
+                          />
+                          <button type="submit" className="text-sm font-medium text-neutral-900 underline">
+                            Save
+                          </button>
+                        </form>
+                      ) : (
+                        <button type="button" onClick={() => setIsSavingFavorite(true)} className="text-sm text-neutral-600 underline">
+                          Save as favorite
+                        </button>
+                      ))}
+
+                    <div className="flex items-center gap-4">
+                      <button type="button" onClick={startOver} className="text-sm text-neutral-600 underline">
+                        Start over
+                      </button>
+                      <button type="button" onClick={editPizza} className="text-sm text-neutral-600 underline">
+                        Edit pizza
                       </button>
                     </div>
                   </div>
-                </article>
-              ))}
-            </>
+                </div>
+              </aside>
+            </div>
           )}
         </section>
       )}
