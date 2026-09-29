@@ -1,8 +1,8 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { PizzaConfig } from '../api/catalog.ts';
-import { createFavorite } from '../api/favorites.ts';
+import { createFavorite, listFavorites } from '../api/favorites.ts';
 import { placeOrder } from '../api/orders.ts';
 import { comparePizzerias, type ComparisonResult, type Coordinates } from '../api/pizzerias.ts';
 import { useAuth } from '../auth/AuthContext.tsx';
@@ -12,6 +12,14 @@ import { PizzaWizard } from '../components/PizzaWizard.tsx';
 import { ResultsCarousel } from '../components/ResultsCarousel.tsx';
 
 const DEFAULT_CONFIG: PizzaConfig = { size: 'MEDIUM', crust: 'THIN', sauce: 'TOMATO', toppings: [] };
+
+// Toppings are compared as a set — the order they were picked in shouldn't
+// make an otherwise-identical pizza count as a different favorite.
+function sameConfig(a: PizzaConfig, b: PizzaConfig): boolean {
+  if (a.size !== b.size || a.crust !== b.crust || a.sauce !== b.sauce) return false;
+  const [sortedA, sortedB] = [[...a.toppings].sort(), [...b.toppings].sort()];
+  return sortedA.length === sortedB.length && sortedA.every((t, i) => t === sortedB[i]);
+}
 
 interface CompareVars {
   config: PizzaConfig;
@@ -31,6 +39,11 @@ export function BuilderPage() {
   const [config, setConfig] = useState<PizzaConfig>(favoriteConfig ?? DEFAULT_CONFIG);
   const [isSavingFavorite, setIsSavingFavorite] = useState(false);
   const [favoriteName, setFavoriteName] = useState('');
+  const [justSavedName, setJustSavedName] = useState<string | null>(null);
+
+  const queryClient = useQueryClient();
+  const favoritesQuery = useQuery({ queryKey: ['favorites'], queryFn: listFavorites, enabled: Boolean(user) });
+  const matchingFavorite = favoritesQuery.data?.find((f) => sameConfig(f, config));
 
   const compareMutation = useMutation({
     mutationFn: (vars: CompareVars) => comparePizzerias(vars.config, vars.location),
@@ -54,7 +67,9 @@ export function BuilderPage() {
     mutationFn: (vars: CompareVars) => createFavorite(favoriteName, vars.config),
     onSuccess: () => {
       setIsSavingFavorite(false);
+      setJustSavedName(favoriteName);
       setFavoriteName('');
+      queryClient.invalidateQueries({ queryKey: ['favorites'] });
     },
   });
 
@@ -67,6 +82,7 @@ export function BuilderPage() {
   const handleWizardComplete = (finishedConfig: PizzaConfig, location: Coordinates) => {
     setConfig(finishedConfig);
     setPhase('results');
+    setJustSavedName(null);
     compareMutation.mutate({ config: finishedConfig, location });
   };
 
@@ -135,7 +151,11 @@ export function BuilderPage() {
 
                     <div className="mt-2 flex flex-col items-center gap-3">
                       {user &&
-                        (isSavingFavorite ? (
+                        (justSavedName ? (
+                          <p className="text-sm font-medium text-green-600">"{justSavedName}" saved to favorites</p>
+                        ) : matchingFavorite ? (
+                          <p className="text-sm text-neutral-500">Already in favorites</p>
+                        ) : isSavingFavorite ? (
                           <form
                             className="flex items-center gap-2"
                             onSubmit={(e) => {
