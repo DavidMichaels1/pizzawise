@@ -4,6 +4,7 @@ A pizza aggregator and custom-order builder: pick a pizza once, and PizzaWise ch
 
 **Live demo:** https://web-production-80031.up.railway.app
 **API health check:** https://api-production-43395.up.railway.app/health
+**User guide:** [docs/USER_GUIDE.md](docs/USER_GUIDE.md)
 
 ## What it does
 
