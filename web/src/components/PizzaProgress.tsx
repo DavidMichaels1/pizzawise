@@ -57,13 +57,14 @@ const CONFETTI = ['🎉', '✨', '🧀', '🎉', '✨', '🧀', '🎉', '✨'].m
   angle: (360 / arr.length) * i,
 }));
 
-// Wisps of steam drifting up off the slice while it "cooks" — staggered
-// starting points, drift directions and timings so they don't move in lockstep.
+// Wisps of steam drifting up off the crust while it "cooks" — based just
+// above the slice (not over it) so they read as rising, not as smudges on
+// the pizza — with staggered positions, drift and timing to avoid lockstep.
 const SMOKE_PUFFS = [
-  { left: '30%', drift: '-14px', duration: 2.6, delay: 0 },
-  { left: '50%', drift: '6px', duration: 2.2, delay: 0.6 },
-  { left: '68%', drift: '16px', duration: 2.8, delay: 1.1 },
-  { left: '44%', drift: '-8px', duration: 2.4, delay: 1.6 },
+  { left: '30%', bottom: '66%', drift: '-12px', duration: 2.6, delay: 0 },
+  { left: '50%', bottom: '72%', drift: '6px', duration: 2.2, delay: 0.6 },
+  { left: '68%', bottom: '68%', drift: '14px', duration: 2.8, delay: 1.1 },
+  { left: '44%', bottom: '75%', drift: '-8px', duration: 2.4, delay: 1.6 },
 ];
 
 // The oven's viewing window, as inset percentages of the 288px stage —
@@ -80,9 +81,8 @@ export function PizzaProgress({ status, label }: { status: ProgressStatus; label
   return (
     <div className="flex flex-col items-center gap-4 py-10">
       <div className="relative h-72 w-72" style={{ perspective: 1000 }}>
-        {/* Baking inside the oven — sized to sit fully within the window rather than behind the frame. */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          {done ? (
+        {done && (
+          <div className="absolute inset-0 flex items-center justify-center">
             <div className="relative flex items-center justify-center">
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden>
                 {CONFETTI.map((c, i) => (
@@ -99,8 +99,14 @@ export function PizzaProgress({ status, label }: { status: ProgressStatus; label
                 🍕
               </span>
             </div>
-          ) : (
-            <svg viewBox="0 0 100 100" className="h-44 w-44" aria-hidden>
+          </div>
+        )}
+
+        {/* Baking inside the oven — bottom-aligned in the window, leaving headroom above the
+            crust for steam to rise through before the frame clips it. */}
+        {!done && (
+          <div className="absolute flex items-end justify-center pb-3" style={WINDOW_INSET}>
+            <svg viewBox="0 0 100 100" className="h-32 w-32" aria-hidden>
               <defs>
                 <clipPath id="pizza-progress-clip">
                   <rect x="0" y={fillTop} width="100" height={100 - fillTop} />
@@ -115,8 +121,8 @@ export function PizzaProgress({ status, label }: { status: ProgressStatus; label
                 <circle key={i} cx={p.cx} cy={p.cy} r={p.r} fill="#7c2d12" opacity={0.55} />
               ))}
             </svg>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* The oven door — drops open on success to reveal the finished pizza behind it. */}
         <AnimatePresence>
@@ -134,8 +140,10 @@ export function PizzaProgress({ status, label }: { status: ProgressStatus; label
                 {SMOKE_PUFFS.map((p, i) => (
                   <span
                     key={i}
-                    className="absolute bottom-2 h-7 w-7 rounded-full bg-neutral-600/80 blur-[3px]"
-                    style={{ left: p.left, '--drift': p.drift, animation: `smoke-rise ${p.duration}s ease-out ${p.delay}s infinite` } as CSSProperties}
+                    className="absolute h-4 w-4 rounded-full bg-neutral-500/70 blur-[2px]"
+                    style={
+                      { left: p.left, bottom: p.bottom, '--drift': p.drift, animation: `smoke-rise ${p.duration}s ease-out ${p.delay}s infinite` } as CSSProperties
+                    }
                   />
                 ))}
               </div>

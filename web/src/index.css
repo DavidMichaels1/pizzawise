@@ -45,7 +45,7 @@
     opacity: 0.85;
   }
   100% {
-    transform: translate(var(--drift, 12px), -70px) scale(1.6);
+    transform: translate(var(--drift, 12px), -46px) scale(1.5);
     opacity: 0;
   }
 }
