@@ -1,7 +1,10 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
+import { TOPPING_OPTIONS, type Topping } from '../api/catalog.ts';
 import type { ComparisonResult } from '../api/pizzerias.ts';
 import { formatDistance, formatEta, formatPrice } from '../lib/format.ts';
+
+const toppingLabel = (topping: Topping) => TOPPING_OPTIONS.find((o) => o.value === topping)?.label ?? topping;
 
 interface Props {
   results: ComparisonResult[];
@@ -59,7 +62,8 @@ export function ResultsCarousel({ results, onOrder, orderPending }: Props) {
                     </p>
                     {result.matchQuality === 'approximate' && (
                       <p className="mt-1 text-xs text-amber-600">
-                        Closest match{result.missingToppings.length > 0 && ` — missing: ${result.missingToppings.join(', ').toLowerCase()}`}
+                        Closest match
+                        {result.missingToppings.length > 0 && ` — missing: ${result.missingToppings.map(toppingLabel).join(', ')}`}
                         {!result.crustAvailable && ' — crust substituted'}
                         {!result.sauceAvailable && ' — sauce unavailable'}
                       </p>
