@@ -15,20 +15,7 @@ A pizza aggregator and custom-order builder: pick a pizza once, and PizzaWise ch
 
 Two independently deployable services, each its own Docker image, talking over HTTP:
 
-```
-┌─────────────┐         ┌─────────────┐         ┌──────────────────────┐
-│   web       │  HTTP   │    api      │  HTTP   │  Pizzeria API         │
-│  (React SPA │────────▶│  (Fastify)  │────────▶│  (hosted mock,        │
-│  + nginx)   │         │             │         │  ~110 pizzerias)      │
-└─────────────┘         └──────┬──────┘         └──────────────────────┘
-                                │
-                                ▼
-                        ┌───────────────┐
-                        │   PostgreSQL   │
-                        │ (users, orders,│
-                        │   favorites)   │
-                        └───────────────┘
-```
+![PizzaWise system architecture](docs/architecture.svg)
 
 - **`web/`** — React + TypeScript + Vite SPA. Talks only to the `api`, never directly to the pizzeria API or the database.
 - **`api/`** — Fastify + TypeScript service. Owns all business logic, the database, and the only credentials for the upstream pizzeria API.
