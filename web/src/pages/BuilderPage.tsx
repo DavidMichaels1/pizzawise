@@ -83,6 +83,8 @@ export function BuilderPage() {
     setConfig(finishedConfig);
     setPhase('results');
     setJustSavedName(null);
+    setIsSavingFavorite(false);
+    setFavoriteName('');
     compareMutation.mutate({ config: finishedConfig, location });
   };
 
