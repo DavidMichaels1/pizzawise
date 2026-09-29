@@ -158,25 +158,32 @@ export function BuilderPage() {
                         ) : matchingFavorite ? (
                           <p className="text-sm text-neutral-500">Already in favorites</p>
                         ) : isSavingFavorite ? (
-                          <form
-                            className="flex items-center gap-2"
-                            onSubmit={(e) => {
-                              e.preventDefault();
-                              if (compareMutation.variables) favoriteMutation.mutate(compareMutation.variables);
-                            }}
-                          >
-                            <input
-                              autoFocus
-                              required
-                              placeholder="Favorite name"
-                              value={favoriteName}
-                              onChange={(e) => setFavoriteName(e.target.value)}
-                              className="rounded-full border border-neutral-300 px-3 py-1.5 text-sm"
-                            />
-                            <button type="submit" className="text-sm font-medium text-neutral-900 underline">
-                              Save
-                            </button>
-                          </form>
+                          <div className="flex flex-col items-center gap-1.5">
+                            <form
+                              className="flex items-center gap-2"
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                if (compareMutation.variables) favoriteMutation.mutate(compareMutation.variables);
+                              }}
+                            >
+                              <input
+                                autoFocus
+                                required
+                                placeholder="Favorite name"
+                                value={favoriteName}
+                                onChange={(e) => setFavoriteName(e.target.value)}
+                                className="rounded-full border border-neutral-300 px-3 py-1.5 text-sm"
+                              />
+                              <button
+                                type="submit"
+                                disabled={favoriteMutation.isPending}
+                                className="text-sm font-medium text-neutral-900 underline disabled:opacity-50"
+                              >
+                                {favoriteMutation.isPending ? 'Saving…' : 'Save'}
+                              </button>
+                            </form>
+                            {favoriteMutation.isError && <p className="text-xs text-red-600">Couldn't save — try again.</p>}
+                          </div>
                         ) : (
                           <button type="button" onClick={() => setIsSavingFavorite(true)} className="text-sm text-neutral-600 underline">
                             Save as favorite
