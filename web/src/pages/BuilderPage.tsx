@@ -76,13 +76,6 @@ export function BuilderPage() {
     setPhase('building');
   };
 
-  const startOver = () => {
-    compareMutation.reset();
-    setConfig(DEFAULT_CONFIG);
-    setWizardKey((k) => k + 1);
-    setPhase('building');
-  };
-
   const orderOrRedirect = (result: ComparisonResult) => {
     if (!compareMutation.variables) return;
     if (!user) {
@@ -164,14 +157,9 @@ export function BuilderPage() {
                           </button>
                         ))}
 
-                      <div className="flex items-center gap-4">
-                        <button type="button" onClick={startOver} className="text-sm text-neutral-600 underline">
-                          Start over
-                        </button>
-                        <button type="button" onClick={editPizza} className="text-sm text-neutral-600 underline">
-                          Edit pizza
-                        </button>
-                      </div>
+                      <button type="button" onClick={editPizza} className="text-sm text-neutral-600 underline">
+                        Edit pizza
+                      </button>
                     </div>
                   </div>
                 </aside>

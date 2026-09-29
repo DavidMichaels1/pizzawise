@@ -33,34 +33,41 @@ export function LocationPicker({ value, onChange }: Props) {
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <label className="block text-sm font-medium text-neutral-700">Delivery location</label>
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={useMyLocation}
-          className="rounded-full border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100"
-        >
-          Use my location
-        </button>
-        <select
-          className="min-w-[180px] rounded-full border border-neutral-300 px-3 py-1.5 text-sm text-neutral-700"
-          value=""
-          onChange={(e) => {
-            const preset = PRESET_LOCATIONS.find((p) => p.label === e.target.value);
-            if (preset) onChange({ lat: preset.lat, lng: preset.lng });
-          }}
-        >
-          <option value="" disabled>
-            Or pick an area
-          </option>
-          {PRESET_LOCATIONS.map((p) => (
-            <option key={p.label} value={p.label}>
-              {p.label}
-            </option>
-          ))}
-        </select>
+
+      <button
+        type="button"
+        onClick={useMyLocation}
+        className="w-full rounded-full bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-700"
+      >
+        Use my location
+      </button>
+
+      <div className="flex items-center gap-3 text-xs text-neutral-400">
+        <span className="h-px flex-1 bg-neutral-200" />
+        or
+        <span className="h-px flex-1 bg-neutral-200" />
       </div>
+
+      <select
+        className="w-full rounded-full border border-neutral-300 px-4 py-2.5 text-sm text-neutral-700"
+        value=""
+        onChange={(e) => {
+          const preset = PRESET_LOCATIONS.find((p) => p.label === e.target.value);
+          if (preset) onChange({ lat: preset.lat, lng: preset.lng });
+        }}
+      >
+        <option value="" disabled>
+          Pick an area
+        </option>
+        {PRESET_LOCATIONS.map((p) => (
+          <option key={p.label} value={p.label}>
+            {p.label}
+          </option>
+        ))}
+      </select>
+
       {value && (
         <p className="text-xs text-neutral-500">
           Delivering to {value.lat.toFixed(4)}, {value.lng.toFixed(4)}
