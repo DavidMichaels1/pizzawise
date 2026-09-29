@@ -92,7 +92,12 @@ export function BuilderPage() {
             <h1 className="text-2xl font-semibold text-neutral-900">Build your pizza</h1>
             <p className="mt-1 text-sm text-neutral-600">A few quick picks and we'll find the best deal nearby.</p>
           </div>
-          <PizzaWizard key={wizardKey} initialConfig={config} onComplete={handleWizardComplete} />
+          <PizzaWizard
+            key={wizardKey}
+            initialConfig={config}
+            skipToLocation={wizardKey === 0 && Boolean(favoriteConfig)}
+            onComplete={handleWizardComplete}
+          />
         </>
       )}
 
@@ -100,7 +105,7 @@ export function BuilderPage() {
         <section className="space-y-4">
           {(compareMutation.isPending || (compareMutation.isSuccess && !revealResults)) && (
             <>
-              <h1 className="text-center text-2xl font-semibold text-neutral-900">Finding the best deals…</h1>
+              <h1 className="text-center text-4xl font-semibold text-neutral-900">Finding the best deals</h1>
               <PizzaProgress
                 status={compareMutation.isSuccess ? 'success' : 'loading'}
                 label="Comparing prices across nearby pizzerias…"

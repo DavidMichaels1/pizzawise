@@ -24,11 +24,15 @@ const slideVariants = {
 
 interface PizzaWizardProps {
   initialConfig: PizzaConfig;
+  // A favorite already has every pick made — only the location is left, so
+  // the wizard opens there instead of making the user click through picks
+  // that are already set (they're still free to arrow back and change them).
+  skipToLocation?: boolean;
   onComplete: (config: PizzaConfig, location: Coordinates) => void;
 }
 
-export function PizzaWizard({ initialConfig, onComplete }: PizzaWizardProps) {
-  const [stepIndex, setStepIndex] = useState(0);
+export function PizzaWizard({ initialConfig, skipToLocation = false, onComplete }: PizzaWizardProps) {
+  const [stepIndex, setStepIndex] = useState(skipToLocation ? STEPS.length - 1 : 0);
   const [direction, setDirection] = useState(1);
   const [config, setConfig] = useState<PizzaConfig>(initialConfig);
   const [location, setLocation] = useState<Coordinates | null>(null);
