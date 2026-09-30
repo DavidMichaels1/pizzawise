@@ -5,6 +5,12 @@ import { fetchMenu, fetchPizzerias } from './pizzeria-api-client.ts';
 
 export type { PizzaRequest } from '../../domain/pizza-matching.ts';
 
+export interface FetchLogger {
+  warn: (obj: Record<string, unknown>, msg: string) => void;
+}
+
+const noopLogger: FetchLogger = { warn: () => {} };
+
 export interface ComparisonResult extends MatchedPizza {
   pizzeriaId: string;
   pizzeriaName: string;
@@ -28,6 +34,7 @@ export async function comparePizzerias(
   request: PizzaRequest,
   deliveryLocation: Coordinates,
   nearbyLimit = NEARBY_CANDIDATE_LIMIT,
+  logger: FetchLogger = noopLogger,
 ): Promise<ComparisonResult[]> {
   const pizzerias = await fetchPizzerias();
 
@@ -42,7 +49,13 @@ export async function comparePizzerias(
 
   const results: ComparisonResult[] = [];
   for (const { pizzeria, distanceKm: distance, menuResult } of withMenus) {
-    if (menuResult.status !== 'ok') continue;
+    if (menuResult.status !== 'ok') {
+      logger.warn(
+        { pizzeriaId: pizzeria.id, pizzeriaName: pizzeria.name, reason: menuResult.status },
+        'Excluded pizzeria from comparison: menu fetch failed',
+      );
+      continue;
+    }
 
     results.push({
       pizzeriaId: pizzeria.id,

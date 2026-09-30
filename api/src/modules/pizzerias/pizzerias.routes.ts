@@ -23,7 +23,12 @@ const pizzeriasRoutes: FastifyPluginAsync = async (app) => {
       lat: number;
       lng: number;
     };
-    const results = await comparePizzerias({ size, crust, sauce, toppings }, { lat, lng });
+    const results = await comparePizzerias(
+      { size, crust, sauce, toppings },
+      { lat, lng },
+      undefined,
+      request.log,
+    );
     return { results };
   });
 };
