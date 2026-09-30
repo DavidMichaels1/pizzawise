@@ -16,7 +16,7 @@ export function Layout({ children }: { children: ReactNode }) {
           <Link to="/" className="text-lg font-semibold text-neutral-900">
             PizzaWise
           </Link>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
             {user && (
               <>
                 <Link to="/favorites" className="text-neutral-600 hover:text-neutral-900">
@@ -25,14 +25,19 @@ export function Layout({ children }: { children: ReactNode }) {
                 <Link to="/orders" className="text-neutral-600 hover:text-neutral-900">
                   Orders
                 </Link>
-                <span className="hidden text-neutral-400 sm:inline">|</span>
-                <span className="hidden text-neutral-600 sm:inline">Hi, {user.name}</span>
+                <span className="hidden h-4 w-px bg-neutral-200 sm:block" />
+                <span className="hidden items-center gap-2 text-neutral-600 sm:flex">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-900 text-xs font-medium text-white">
+                    {user.name.charAt(0).toUpperCase()}
+                  </span>
+                  {user.name}
+                </span>
                 <button
                   onClick={() => {
                     logout();
                     navigate('/');
                   }}
-                  className="text-neutral-600 hover:text-neutral-900"
+                  className="rounded-full border border-neutral-300 px-3 py-1 text-neutral-600 hover:border-neutral-400 hover:text-neutral-900"
                 >
                   Log out
                 </button>
