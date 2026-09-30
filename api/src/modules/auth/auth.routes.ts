@@ -29,6 +29,9 @@ const authRoutes: FastifyPluginAsync = async (app) => {
           },
         },
       },
+      // Tighter than the global default — this and /auth/login are the
+      // endpoints a credential-stuffing attempt would actually hit.
+      config: { rateLimit: { max: 5, timeWindow: '1 minute' } },
     },
     async (request, reply) => {
       const { email, password, name } = request.body as {
@@ -49,19 +52,23 @@ const authRoutes: FastifyPluginAsync = async (app) => {
     },
   );
 
-  app.post('/auth/login', { schema: loginBodySchema }, async (request, reply) => {
-    const { email, password } = request.body as { email: string; password: string };
-    try {
-      const user = await verifyCredentials(app.prisma, email, password);
-      const token = app.jwt.sign({ sub: user.id });
-      return reply.send({ token, user: { id: user.id, email: user.email, name: user.name } });
-    } catch (err) {
-      if (err instanceof InvalidCredentialsError) {
-        return reply.code(401).send({ error: 'Invalid email or password' });
+  app.post(
+    '/auth/login',
+    { schema: loginBodySchema, config: { rateLimit: { max: 5, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      const { email, password } = request.body as { email: string; password: string };
+      try {
+        const user = await verifyCredentials(app.prisma, email, password);
+        const token = app.jwt.sign({ sub: user.id });
+        return reply.send({ token, user: { id: user.id, email: user.email, name: user.name } });
+      } catch (err) {
+        if (err instanceof InvalidCredentialsError) {
+          return reply.code(401).send({ error: 'Invalid email or password' });
+        }
+        throw err;
       }
-      throw err;
-    }
-  });
+    },
+  );
 
   app.get('/auth/me', { preHandler: app.authenticate }, async (request) => {
     const { sub } = request.user;

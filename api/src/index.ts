@@ -1,4 +1,5 @@
 import cors from '@fastify/cors';
+import rateLimit from '@fastify/rate-limit';
 import Fastify from 'fastify';
 import { env } from './env.ts';
 import authRoutes from './modules/auth/auth.routes.ts';
@@ -21,6 +22,10 @@ app.get('/health', async () => ({ status: 'ok', uptime: process.uptime() }));
 // infer this from registered routes, so DELETE (favorites) must be listed
 // explicitly or the browser's preflight silently blocks it.
 await app.register(cors, { origin: env.frontendOrigin, methods: ['GET', 'POST', 'DELETE'] });
+// A generous global ceiling against abuse; login/register carry their own
+// much tighter per-route limit against credential brute-forcing (see
+// auth.routes.ts), since 100/min would do nothing to stop that.
+await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
 await app.register(prismaPlugin);
 await app.register(authPlugin);
 await app.register(authRoutes);

@@ -16,7 +16,9 @@ declare module 'fastify' {
 }
 
 const authPlugin: FastifyPluginAsync = async (app) => {
-  await app.register(jwt, { secret: env.jwtSecret });
+  // Tokens previously never expired — anyone who ever captured one (a
+  // leaked log, an old browser profile) could use it forever.
+  await app.register(jwt, { secret: env.jwtSecret, sign: { expiresIn: '7d' } });
 
   app.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
     try {
