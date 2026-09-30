@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import { Link, useParams } from 'react-router-dom';
 import { CRUST_OPTIONS, SAUCE_OPTIONS, SIZE_OPTIONS, TOPPING_OPTIONS } from '../api/catalog.ts';
 import { cancelOrder, fetchOrder } from '../api/orders.ts';
@@ -32,18 +33,47 @@ export function OrderDetailPage() {
 
   return (
     <div className="space-y-6">
-      <Link to="/orders" className="text-sm text-neutral-600 underline">
-        ← Back to orders
+      <Link
+        to="/orders"
+        className="-ml-2 inline-flex items-center gap-1 rounded-full px-2 py-1 text-sm font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+      >
+        <span aria-hidden>←</span> Back to orders
       </Link>
 
       <div className="rounded-xl border border-neutral-200 bg-white p-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-neutral-900">{order.pizzeriaName}</h1>
-            <p className="text-sm text-neutral-600">{new Date(order.placedAt).toLocaleString()}</p>
+        {order.status === 'PLACED' ? (
+          <div className="flex flex-col items-center gap-3 py-6 text-center">
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 16 }}
+              className="flex h-20 w-20 items-center justify-center rounded-full bg-green-500"
+            >
+              <svg viewBox="0 0 24 24" className="h-10 w-10" fill="none" stroke="white" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+                <motion.path
+                  d="M5 13l4 4L19 7"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ delay: 0.25, duration: 0.4, ease: 'easeOut' }}
+                />
+              </svg>
+            </motion.div>
+            <div>
+              <h1 className="text-2xl font-bold text-neutral-900">Order placed!</h1>
+              <p className="mt-1 text-sm text-neutral-600">
+                {order.pizzeriaName} · {new Date(order.placedAt).toLocaleString()}
+              </p>
+            </div>
           </div>
-          <StatusBadge status={order.status} />
-        </div>
+        ) : (
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-xl font-semibold text-neutral-900">{order.pizzeriaName}</h1>
+              <p className="text-sm text-neutral-600">{new Date(order.placedAt).toLocaleString()}</p>
+            </div>
+            <StatusBadge status={order.status} />
+          </div>
+        )}
 
         <dl className="mt-6 grid grid-cols-2 gap-4 text-sm">
           <div>

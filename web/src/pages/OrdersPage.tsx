@@ -13,8 +13,11 @@ export function OrdersPage() {
 
   return (
     <div className="space-y-4">
-      <Link to="/" className="text-sm text-neutral-600 underline">
-        ← Back to home
+      <Link
+        to="/"
+        className="-ml-2 inline-flex items-center gap-1 rounded-full px-2 py-1 text-sm font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+      >
+        <span aria-hidden>←</span> Back to home
       </Link>
       <h1 className="text-2xl font-semibold text-neutral-900">Your orders</h1>
       {orders?.length === 0 && <p className="text-neutral-600">No orders yet.</p>}
