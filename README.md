@@ -93,8 +93,11 @@ npm run dev                 # http://localhost:5173
 ### Tests
 
 ```bash
-cd api && npm test          # 34 unit tests, pure domain logic — no DB or network needed
+cd api && npm test              # 34 unit tests, pure domain logic — no DB or network needed
+cd api && npm run test:integration  # route-level tests (auth, favorites) against a real Postgres — needs docker compose up -d
 ```
+
+The two suites are deliberately separate: unit tests should stay instant and dependency-free for fast local iteration, while the integration suite exercises the actual HTTP layer — routing, JSON-schema validation, JWT issuing/verification — through Fastify's `inject()` against a real database, and cleans up every row it creates.
 
 ### Type checking
 
@@ -129,6 +132,12 @@ Both services run on Railway as separate services from the same GitHub repo, eac
 - **`api`** builds a multi-stage image, runs `prisma migrate deploy` automatically on container start, then starts the server. Reads `DATABASE_URL` (a Railway variable reference to the Postgres service), `JWT_SECRET`, `PIZZERIA_API_BASE_URL`, `PIZZERIA_API_KEY`, and `FRONTEND_ORIGIN` (for CORS — falls back to `*` if unset).
 - **`web`** is built with Vite and served by nginx, with SPA fallback routing (`try_files $uri /index.html`) so client-side routes survive a page refresh. `VITE_API_BASE_URL` is baked in at *build* time (Vite convention), passed as a Docker build ARG pointing at the `api` service's public domain.
 - Postgres is a managed Railway Postgres instance, referenced by the `api` service via `${{Postgres.DATABASE_URL}}`.
+
+## Observability
+
+- **Structured logging.** The API logs through Fastify's built-in Pino logger — structured JSON in production (`NODE_ENV=production`), pretty-printed for local dev. Every request/response is logged with method, path, status, and response time by default.
+- **Health checks.** `GET /health` returns `{ status, uptime }` and is what Railway itself polls to decide whether a deployment is healthy.
+- **Monitoring.** Railway provides CPU, memory, network, and restart metrics per service out of the box (visible on each service's own dashboard) — no separate APM was wired in, since duplicating that for a project this size would be redundant with what the platform already gives you for free.
 
 ## Bonus: CLI + Claude Skill
 
