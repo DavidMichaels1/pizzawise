@@ -12,11 +12,11 @@ export function Layout({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-neutral-50">
       <PizzaBackground />
       <header className="border-b border-neutral-200 bg-white">
-        <nav className="flex items-center justify-between px-6 py-3">
+        <nav className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-3 sm:px-6">
           <Link to="/" className="text-lg font-semibold text-neutral-900">
             PizzaWise
           </Link>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
             {user && (
               <>
                 <Link to="/favorites" className="text-neutral-600 hover:text-neutral-900">
@@ -25,8 +25,8 @@ export function Layout({ children }: { children: ReactNode }) {
                 <Link to="/orders" className="text-neutral-600 hover:text-neutral-900">
                   Orders
                 </Link>
-                <span className="text-neutral-400">|</span>
-                <span className="text-neutral-600">Hi, {user.name}</span>
+                <span className="hidden text-neutral-400 sm:inline">|</span>
+                <span className="hidden text-neutral-600 sm:inline">Hi, {user.name}</span>
                 <button
                   onClick={() => {
                     logout();
