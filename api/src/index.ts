@@ -14,6 +14,11 @@ const app = Fastify({
     level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
     transport: process.env.NODE_ENV === 'production' ? undefined : { target: 'pino-pretty' },
   },
+  // Railway terminates TLS at its edge and proxies to this container, so
+  // without this every request's socket peer is Railway's proxy, not the
+  // real client — making `request.ip` (and therefore per-IP rate limiting)
+  // meaningless. This trusts the standard X-Forwarded-For chain instead.
+  trustProxy: true,
 });
 
 app.get('/health', async () => ({ status: 'ok', uptime: process.uptime() }));
