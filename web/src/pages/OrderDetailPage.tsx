@@ -2,12 +2,29 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Link, useParams } from 'react-router-dom';
 import { CRUST_OPTIONS, SAUCE_OPTIONS, SIZE_OPTIONS, TOPPING_OPTIONS } from '../api/catalog.ts';
-import { cancelOrder, fetchOrder } from '../api/orders.ts';
+import { cancelOrder, fetchOrder, type Order, type OrderStatus } from '../api/orders.ts';
+import { DeliveryStepper } from '../components/DeliveryStepper.tsx';
+import { OrderMap } from '../components/OrderMap.tsx';
 import { StatusBadge } from '../components/StatusBadge.tsx';
 import { formatDistance, formatEta, formatPrice } from '../lib/format.ts';
 
 const labelFor = (options: { value: string; label: string }[], value: string) =>
   options.find((o) => o.value === value)?.label ?? value;
+
+// A continuous 0–1 fraction of how far along the (straight-line, unrouted)
+// trip the order is — driven by elapsed time against the pizzeria's ETA, the
+// same signal the backend's status derivation uses, just not bucketed into
+// discrete stages. Used only to position the map's moving marker.
+function deliveryProgress(order: Order): number {
+  if (order.status === 'DELIVERED') return 1;
+  if (order.status === 'CANCELLED') return 0;
+  if (order.etaMinutes == null) {
+    const fallback: Partial<Record<OrderStatus, number>> = { PLACED: 0, PREPARING: 0.3, OUT_FOR_DELIVERY: 0.7 };
+    return fallback[order.status] ?? 0;
+  }
+  const elapsedMinutes = (Date.now() - new Date(order.placedAt).getTime()) / 60_000;
+  return Math.min(Math.max(elapsedMinutes / order.etaMinutes, 0), 1);
+}
 
 export function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -72,6 +89,17 @@ export function OrderDetailPage() {
               <p className="text-sm text-neutral-600">{new Date(order.placedAt).toLocaleString()}</p>
             </div>
             <StatusBadge status={order.status} />
+          </div>
+        )}
+
+        {order.status !== 'CANCELLED' && (
+          <div className="mt-6 space-y-4">
+            <DeliveryStepper status={order.status} />
+            <OrderMap
+              pizzeria={{ lat: order.pizzeriaLat, lng: order.pizzeriaLng }}
+              delivery={{ lat: order.deliveryLat, lng: order.deliveryLng }}
+              progress={deliveryProgress(order)}
+            />
           </div>
         )}
 

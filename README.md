@@ -11,6 +11,7 @@ A pizza aggregator and custom-order builder: pick a pizza once, and PizzaWise ch
 - **Guided pizza builder** — a step-by-step wizard (size → crust → sauce → toppings → location) with a live illustration of the pizza as you build it.
 - **Smart comparison engine** — fetches the nearest pizzerias' real menus from a live upstream API, normalizes their inconsistent naming, and ranks them by a composite value score blending price, distance, and ETA.
 - **Accounts, favorites, and order history** — register/log in, save a pizza configuration as a favorite to reorder later, place an order, and track its (simulated) delivery status over time.
+- **Live delivery tracking** — an order's detail page shows an animated status stepper and a map (Leaflet + OpenStreetMap, no API key required) with the pizzeria, the delivery address, and a marker that moves between them as the order progresses — driven by the same elapsed-time-vs-ETA logic the status itself is derived from.
 
 ## Architecture
 
